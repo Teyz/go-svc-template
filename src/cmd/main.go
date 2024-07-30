@@ -11,6 +11,7 @@ import (
 
 	"github.com/teyz/go-svc-template/internal/config"
 	database_postgres "github.com/teyz/go-svc-template/internal/database/postgres"
+	handlers_http "github.com/teyz/go-svc-template/internal/handlers/http"
 	service_v1 "github.com/teyz/go-svc-template/internal/service/v1"
 	pkg_redis "github.com/teyz/go-svc-template/pkg/cache/redis"
 	pkg_config "github.com/teyz/go-svc-template/pkg/config"
@@ -48,7 +49,7 @@ func main() {
 	}
 
 	// create http server
-	httpServer, err := handlers_http.NewServer(ctx, cfg.HTTPServerConfig, service)
+	httpServer, err := handlers_http.NewServer(ctx, cfg.HTTPServerConfig, exampleStoreService)
 	if err != nil {
 		log.Fatal().Err(err).
 			Msg("main: unable to create http server")

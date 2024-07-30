@@ -15,7 +15,7 @@ override DB_PASSWORD = root
 endif
 
 ifndef DB_NAME
-override DB_NAME = chnl-store-db
+override DB_NAME = go-svc-db
 endif
 
 run:
