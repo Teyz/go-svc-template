@@ -31,7 +31,7 @@ func (d *dbClient) CreateExample(ctx context.Context, description string) (*enti
 	if err != nil {
 		log.Error().Err(err).
 			Msgf("database.postgres.dbClient.CreateExample: failed to create example: %v", err.Error())
-		return nil, errors.NewInternalServerError(fmt.Sprintf("database.postgres.dbClient.CreateExample: failed to create description: %v", err.Error()))
+		return nil, errors.NewInternalServerError(fmt.Sprintf("database.postgres.dbClient.CreateExample: failed to create example: %v", err.Error()))
 	}
 
 	return &entities_example_v1.Example{
@@ -79,7 +79,7 @@ func (d *dbClient) GetExampleByID(ctx context.Context, id string) (*entities_exa
 	return example, nil
 }
 
-func (d *dbClient) GetExamples(ctx context.Context) ([]*entities_example_v1.Example, error) {
+func (d *dbClient) FetchExamples(ctx context.Context) ([]*entities_example_v1.Example, error) {
 	rows, err := d.connection.DB.QueryContext(ctx, `
 		SELECT
 			id,
@@ -91,8 +91,8 @@ func (d *dbClient) GetExamples(ctx context.Context) ([]*entities_example_v1.Exam
 	`)
 	if err != nil {
 		log.Error().Err(err).
-			Msgf("database.postgres.dbClient.GetExamples: failed to get examples: %v", err.Error())
-		return nil, errors.NewInternalServerError(fmt.Sprintf("database.postgres.dbClient.GetExamples: failed to get examples: %v", err.Error()))
+			Msgf("database.postgres.dbClient.FetchExamples: failed to get examples: %v", err.Error())
+		return nil, errors.NewInternalServerError(fmt.Sprintf("database.postgres.dbClient.FetchExamples: failed to get examples: %v", err.Error()))
 	}
 	defer rows.Close()
 
@@ -109,8 +109,8 @@ func (d *dbClient) GetExamples(ctx context.Context) ([]*entities_example_v1.Exam
 		)
 		if err != nil {
 			log.Error().Err(err).
-				Msgf("database.postgres.dbClient.GetExamples: failed to scan example: %v", err.Error())
-			return nil, errors.NewInternalServerError(fmt.Sprintf("database.postgres.dbClient.GetExamples: failed to scan example: %v", err.Error()))
+				Msgf("database.postgres.dbClient.FetchExamples: failed to scan example: %v", err.Error())
+			return nil, errors.NewInternalServerError(fmt.Sprintf("database.postgres.dbClient.FetchExamples: failed to scan example: %v", err.Error()))
 		}
 
 		examples = append(examples, example)

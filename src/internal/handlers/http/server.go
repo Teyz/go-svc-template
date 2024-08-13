@@ -34,11 +34,10 @@ func (s *httpServer) Setup(ctx context.Context) error {
 		Msg("handlers.http.httpServer.Setup: Setting up HTTP server...")
 
 	// setup handlers
-	privateHealhV1Handlers := handlers_http_private_health_v1.NewHandler(ctx, s.service)
+	privateHealthV1Handlers := handlers_http_private_health_v1.NewHandler(ctx)
 	privateExampleV1Handlers := handlers_http_private_example_v1.NewHandler(ctx, s.service)
 
 	// setup middlewares
-	//s.router.Use(middleware.Logger())
 	s.router.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogURI:    true,
 		LogStatus: true,
@@ -54,16 +53,18 @@ func (s *httpServer) Setup(ctx context.Context) error {
 	s.router.Use(middleware.Recover())
 	s.router.Use(middleware.CORS())
 
+	s.router.Pre(middleware.RemoveTrailingSlash())
+
 	// health endpoints
-	s.router.GET("/health", privateHealhV1Handlers.HealthCheck)
+	s.router.GET("/health", privateHealthV1Handlers.HealthCheck)
 
 	// private endpoints
 	privateV1 := s.router.Group("/private/v1")
 
 	// example endpoints
 	examplesV1 := privateV1.Group("/examples")
-	examplesV1.GET("/", privateExampleV1Handlers.GetExamples)
-	examplesV1.POST("/", privateExampleV1Handlers.CreateExample)
+	examplesV1.GET("", privateExampleV1Handlers.FetchExamples)
+	examplesV1.POST("", privateExampleV1Handlers.CreateExample)
 	examplesV1.GET("/:id", privateExampleV1Handlers.GetExampleByID)
 
 	return nil

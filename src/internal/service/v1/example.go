@@ -19,7 +19,7 @@ func (s *service) CreateExample(ctx context.Context, description string) (*entit
 	return example, nil
 }
 
-func (s *service) GetExamples(ctx context.Context) ([]*entities_example_v1.Example, error) {
+func (s *service) FetchExamples(ctx context.Context) ([]*entities_example_v1.Example, error) {
 	key := generateExamplesCacheKey()
 
 	cacheExamples, err := s.cache.Get(ctx, key)
@@ -28,13 +28,13 @@ func (s *service) GetExamples(ctx context.Context) ([]*entities_example_v1.Examp
 		err = json.Unmarshal([]byte(cacheExamples), &examples)
 		if err != nil {
 			log.Error().Err(err).
-				Msg("service.v1.service.GetExamples: unable to unmarshal examples")
+				Msg("service.v1.service.FetchExamples: unable to unmarshal examples")
 		} else {
 			return examples, nil
 		}
 	}
 
-	examples, err := s.store.GetExamples(ctx)
+	examples, err := s.store.FetchExamples(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (s *service) GetExamples(ctx context.Context) ([]*entities_example_v1.Examp
 	bytes, err := json.Marshal(examples)
 	if err != nil {
 		log.Error().Err(err).
-			Msg("service.v1.service.GetExamples: unable to marshal examples")
+			Msg("service.v1.service.FetchExamples: unable to marshal examples")
 	} else {
 		s.cache.SetEx(ctx, key, bytes, exampleCacheDuration)
 	}

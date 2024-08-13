@@ -14,7 +14,7 @@ const (
 )
 
 func generateExampleCacheKeyWithID(id string) string {
-	return fmt.Sprintf("go-svc-template:channel:id:%v", id)
+	return fmt.Sprintf("go-svc-template:example:id:%v", id)
 }
 
 func generateExamplesCacheKey() string {

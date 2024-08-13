@@ -12,10 +12,10 @@ type GetExamplesResponse struct {
 	Examples []*entities_example_v1.Example `json:"examples"`
 }
 
-func (h *Handler) GetExamples(c echo.Context) error {
+func (h *Handler) FetchExamples(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	examples, err := h.service.GetExamples(ctx)
+	examples, err := h.service.FetchExamples(ctx)
 	if err != nil {
 		return c.JSON(pkg_http.TranslateError(ctx, err))
 	}

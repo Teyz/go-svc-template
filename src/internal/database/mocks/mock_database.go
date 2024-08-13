@@ -8,8 +8,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	gomock "github.com/golang/mock/gomock"
-	entities_example_v1 "github.com/teyz/go-svc-template/internal/entities/example/v1"
+	gomock "go.uber.org/mock/gomock"
+	v1 "github.com/teyz/go-svc-template/internal/entities/example/v1"
 )
 
 // MockDatabase is a mock of Database interface.
@@ -36,10 +36,10 @@ func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 }
 
 // CreateExample mocks base method.
-func (m *MockDatabase) CreateExample(ctx context.Context, description string) (*entities_example_v1.Example, error) {
+func (m *MockDatabase) CreateExample(ctx context.Context, description string) (*v1.Example, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateExample", ctx, description)
-	ret0, _ := ret[0].(*entities_example_v1.Example)
+	ret0, _ := ret[0].(*v1.Example)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -50,11 +50,26 @@ func (mr *MockDatabaseMockRecorder) CreateExample(ctx, description interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateExample", reflect.TypeOf((*MockDatabase)(nil).CreateExample), ctx, description)
 }
 
+// FetchExamples mocks base method.
+func (m *MockDatabase) FetchExamples(ctx context.Context) ([]*v1.Example, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FetchExamples", ctx)
+	ret0, _ := ret[0].([]*v1.Example)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FetchExamples indicates an expected call of FetchExamples.
+func (mr *MockDatabaseMockRecorder) FetchExamples(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchExamples", reflect.TypeOf((*MockDatabase)(nil).FetchExamples), ctx)
+}
+
 // GetExampleByID mocks base method.
-func (m *MockDatabase) GetExampleByID(ctx context.Context, id string) (*entities_example_v1.Example, error) {
+func (m *MockDatabase) GetExampleByID(ctx context.Context, id string) (*v1.Example, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetExampleByID", ctx, id)
-	ret0, _ := ret[0].(*entities_example_v1.Example)
+	ret0, _ := ret[0].(*v1.Example)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -63,19 +78,4 @@ func (m *MockDatabase) GetExampleByID(ctx context.Context, id string) (*entities
 func (mr *MockDatabaseMockRecorder) GetExampleByID(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExampleByID", reflect.TypeOf((*MockDatabase)(nil).GetExampleByID), ctx, id)
-}
-
-// GetExamples mocks base method.
-func (m *MockDatabase) GetExamples(ctx context.Context) ([]*entities_example_v1.Example, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetExamples", ctx)
-	ret0, _ := ret[0].([]*entities_example_v1.Example)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetExamples indicates an expected call of GetExamples.
-func (mr *MockDatabaseMockRecorder) GetExamples(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExamples", reflect.TypeOf((*MockDatabase)(nil).GetExamples), ctx)
 }

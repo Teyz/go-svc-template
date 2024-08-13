@@ -158,7 +158,7 @@ func Test_GetExamples(t *testing.T) {
 
 		mock.ExpectQuery("SELECT id, description, created_at, updated_at FROM examples").WillReturnError(nil).WillReturnRows(rows)
 
-		examples, err := sqlxDB.GetExamples(context.Background())
+		examples, err := sqlxDB.FetchExamples(context.Background())
 		assert.NotNil(t, examples)
 		assert.NoError(t, err)
 
@@ -184,7 +184,7 @@ func Test_GetExamples(t *testing.T) {
 
 		mock.ExpectQuery("SELECT id, description, created_at, updated_at FROM examples").WillReturnError(errors.NewInternalServerError("error"))
 
-		examples, err := sqlxDB.GetExamples(context.Background())
+		examples, err := sqlxDB.FetchExamples(context.Background())
 		assert.Nil(t, examples)
 		assert.Error(t, err)
 
@@ -203,7 +203,7 @@ func Test_GetExamples(t *testing.T) {
 
 		mock.ExpectQuery("SELECT id, description, created_at, updated_at FROM examples").WillReturnError(sql.ErrNoRows)
 
-		examples, err := sqlxDB.GetExamples(context.Background())
+		examples, err := sqlxDB.FetchExamples(context.Background())
 		assert.Nil(t, examples)
 		assert.Error(t, err)
 

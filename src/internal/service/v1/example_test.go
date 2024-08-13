@@ -7,12 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	database_mocks "github.com/teyz/go-svc-template/internal/database/mocks"
 	entities_example_v1 "github.com/teyz/go-svc-template/internal/entities/example/v1"
+	cache_mocks "github.com/teyz/go-svc-template/pkg/cache/mocks"
 	"github.com/teyz/go-svc-template/pkg/constants"
 	"github.com/teyz/go-svc-template/pkg/errors"
+	"go.uber.org/mock/gomock"
 )
 
 func Test_CreateExample(t *testing.T) {
@@ -30,6 +31,8 @@ func Test_CreateExample(t *testing.T) {
 			CreatedAt:   created,
 			UpdatedAt:   created,
 		}, nil)
+
+		mock_cache.EXPECT().Del(gomock.Any(), generateExamplesCacheKey())
 
 		s, err := NewExampleStoreService(context.Background(), mock_database, mock_cache)
 		assert.NotNil(t, s)
@@ -71,141 +74,130 @@ func Test_GetExampleByID(t *testing.T) {
 		exampleID := constants.GenerateDataPrefixWithULID(constants.Example)
 		created := time.Now()
 
-		channelCached := &entities_channel_v1.Channel{
-			ID:        channelID,
-			UserID:    "user_id",
-			Slug:      "teyz",
-			CreatedAt: created,
-			UpdatedAt: created,
+		exampleCached := &entities_example_v1.Example{
+			ID:          exampleID,
+			Description: "hello world !",
+			CreatedAt:   created,
+			UpdatedAt:   created,
 		}
 
-		channelCachedBytes, _ := json.Marshal(channelCached)
+		exampleCachedBytes, _ := json.Marshal(exampleCached)
 
-		mock_cache.EXPECT().Get(gomock.Any(), "teyz").Return(string(channelCachedBytes), nil)
+		mock_cache.EXPECT().Get(gomock.Any(), fmt.Sprintf("go-svc-template:example:id:%v", exampleID)).Return(string(exampleCachedBytes), nil)
 
-		s, err := NewChannelStoreService(context.Background(), mock_database, mock_cache)
+		s, err := NewExampleStoreService(context.Background(), mock_database, mock_cache)
 		assert.NotNil(t, s)
 		assert.NoError(t, err)
 
-		channel, err := s.GetChannelBySlug(context.Background(), "teyz")
-		assert.NotNil(t, channel)
+		example, err := s.GetExampleByID(context.Background(), exampleID)
+		assert.NotNil(t, example)
 		assert.NoError(t, err)
 
-		assert.Equal(t, channelID, channel.ID)
-		assert.Equal(t, "user_id", channel.UserID)
-		assert.Equal(t, "teyz", channel.Slug)
-		assert.True(t, channel.CreatedAt.Equal(created))
-		assert.True(t, channel.UpdatedAt.Equal(created))
+		assert.Equal(t, exampleID, example.ID)
+		assert.Equal(t, "hello world !", example.Description)
+		assert.True(t, example.CreatedAt.Equal(created))
+		assert.True(t, example.UpdatedAt.Equal(created))
 	})
 	t.Run("ok - get example by id from database", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mock_database := database_mocks.NewMockDatabase(ctrl)
-
-		channelID := constants.GenerateDataPrefixWithULID(constants.Channel)
-		created := time.Now()
-
-		mock_database.EXPECT().GetChannelBySlug(gomock.Any(), "teyz").Return(&entities_channel_v1.Channel{
-			ID:        channelID,
-			UserID:    "user_id",
-			Slug:      "teyz",
-			CreatedAt: created,
-			UpdatedAt: created,
-		}, nil)
-
 		mock_cache := cache_mocks.NewMockCache(ctrl)
 
-		mock_cache.EXPECT().Get(gomock.Any(), "teyz").Return("", pkgerrors.NewNotFoundError("error"))
+		exampleID := constants.GenerateDataPrefixWithULID(constants.Example)
+		created := time.Now()
 
-		channelCached := &entities_channel_v1.Channel{
-			ID:        channelID,
-			UserID:    "user_id",
-			Slug:      "teyz",
-			CreatedAt: created,
-			UpdatedAt: created,
+		mock_database.EXPECT().GetExampleByID(gomock.Any(), exampleID).Return(&entities_example_v1.Example{
+			ID:          exampleID,
+			Description: "hello world !",
+			CreatedAt:   created,
+			UpdatedAt:   created,
+		}, nil)
+
+		mock_cache.EXPECT().Get(gomock.Any(), fmt.Sprintf("go-svc-template:example:id:%v", exampleID)).Return("", errors.NewNotFoundError("error"))
+
+		exampleCached := &entities_example_v1.Example{
+			ID:          exampleID,
+			Description: "hello world !",
+			CreatedAt:   created,
+			UpdatedAt:   created,
 		}
 
-		channelCachedBytes, _ := json.Marshal(channelCached)
+		exampleCachedBytes, _ := json.Marshal(exampleCached)
 
-		mock_cache.EXPECT().SetEx(gomock.Any(), "chnl-store-svc:channel:slug:teyz", channelCachedBytes, time.Hour*24).Return(nil)
+		mock_cache.EXPECT().SetEx(gomock.Any(), fmt.Sprintf("go-svc-template:example:id:%v", exampleID), exampleCachedBytes, time.Hour*24).Return(nil)
 
-		s, err := NewChannelStoreService(context.Background(), mock_database, mock_cache)
+		s, err := NewExampleStoreService(context.Background(), mock_database, mock_cache)
 		assert.NotNil(t, s)
 		assert.NoError(t, err)
 
-		channel, err := s.GetChannelBySlug(context.Background(), "teyz")
-		assert.NotNil(t, channel)
+		example, err := s.GetExampleByID(context.Background(), exampleID)
+		assert.NotNil(t, example)
 		assert.NoError(t, err)
 
-		assert.Equal(t, channelID, channel.ID)
-		assert.Equal(t, "user_id", channel.UserID)
-		assert.Equal(t, "teyz", channel.Slug)
-		assert.True(t, channel.CreatedAt.Equal(created))
-		assert.True(t, channel.UpdatedAt.Equal(created))
+		assert.Equal(t, exampleID, example.ID)
+		assert.Equal(t, "hello world !", example.Description)
+		assert.True(t, example.CreatedAt.Equal(created))
+		assert.True(t, example.UpdatedAt.Equal(created))
 	})
 	t.Run("nok - get example by id from database", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mock_database := database_mocks.NewMockDatabase(ctrl)
-
-		mock_database.EXPECT().GetChannelBySlug(gomock.Any(), "teyz").Return(nil, pkgerrors.NewNotFoundError("error"))
-
 		mock_cache := cache_mocks.NewMockCache(ctrl)
 
-		mock_cache.EXPECT().Get(gomock.Any(), "teyz").Return("", pkgerrors.NewNotFoundError("error"))
+		mock_database.EXPECT().GetExampleByID(gomock.Any(), "id").Return(nil, errors.NewNotFoundError("error"))
 
-		s, err := NewChannelStoreService(context.Background(), mock_database, mock_cache)
+		mock_cache.EXPECT().Get(gomock.Any(), fmt.Sprintf("go-svc-template:example:id:%v", "id")).Return("", errors.NewNotFoundError("error"))
+
+		s, err := NewExampleStoreService(context.Background(), mock_database, mock_cache)
 		assert.NotNil(t, s)
 		assert.NoError(t, err)
 
-		channel, err := s.GetChannelBySlug(context.Background(), "teyz")
-		assert.Nil(t, channel)
+		example, err := s.GetExampleByID(context.Background(), "id")
+		assert.Nil(t, example)
 		assert.Error(t, err)
 	})
 	t.Run("ok - get example by id when get cache", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mock_database := database_mocks.NewMockDatabase(ctrl)
-
 		mock_cache := cache_mocks.NewMockCache(ctrl)
 
 		fakeData := `abczd{>`
 
-		mock_cache.EXPECT().Get(gomock.Any(), "teyz").Return(fakeData, nil)
-
 		exampleID := constants.GenerateDataPrefixWithULID(constants.Example)
 		created := time.Now()
 
-		mock_database.EXPECT().GetChannelBySlug(gomock.Any(), "teyz").Return(&entities_channel_v1.Channel{
-			ID:        channelID,
-			UserID:    "user_id",
-			Slug:      "teyz",
-			CreatedAt: created,
-			UpdatedAt: created,
+		mock_cache.EXPECT().Get(gomock.Any(), fmt.Sprintf("go-svc-template:example:id:%v", exampleID)).Return(fakeData, nil)
+
+		mock_database.EXPECT().GetExampleByID(gomock.Any(), exampleID).Return(&entities_example_v1.Example{
+			ID:          exampleID,
+			Description: "hello world !",
+			CreatedAt:   created,
+			UpdatedAt:   created,
 		}, nil)
 
-		channelCached := &entities_channel_v1.Channel{
-			ID:        channelID,
-			UserID:    "user_id",
-			Slug:      "teyz",
-			CreatedAt: created,
-			UpdatedAt: created,
+		exampleCached := &entities_example_v1.Example{
+			ID:          exampleID,
+			Description: "hello world !",
+			CreatedAt:   created,
+			UpdatedAt:   created,
 		}
 
-		channelCachedBytes, _ := json.Marshal(channelCached)
+		exampleCachedBytes, _ := json.Marshal(exampleCached)
 
-		mock_cache.EXPECT().SetEx(gomock.Any(), "chnl-store-svc:channel:slug:teyz", channelCachedBytes, time.Hour*24).Return(nil)
+		mock_cache.EXPECT().SetEx(gomock.Any(), fmt.Sprintf("go-svc-template:example:id:%v", exampleID), exampleCachedBytes, time.Hour*24).Return(nil)
 
-		s, err := NewChannelStoreService(context.Background(), mock_database, mock_cache)
+		s, err := NewExampleStoreService(context.Background(), mock_database, mock_cache)
 		assert.NotNil(t, s)
 		assert.NoError(t, err)
 
-		channel, err := s.GetChannelBySlug(context.Background(), "teyz")
-		assert.NotNil(t, channel)
+		example, err := s.GetExampleByID(context.Background(), exampleID)
+		assert.NotNil(t, example)
 		assert.NoError(t, err)
 
-		assert.Equal(t, channelID, channel.ID)
-		assert.Equal(t, "user_id", channel.UserID)
-		assert.Equal(t, "teyz", channel.Slug)
-		assert.True(t, channel.CreatedAt.Equal(created))
-		assert.True(t, channel.UpdatedAt.Equal(created))
+		assert.Equal(t, exampleID, example.ID)
+		assert.Equal(t, "hello world !", example.Description)
+		assert.True(t, example.CreatedAt.Equal(created))
+		assert.True(t, example.UpdatedAt.Equal(created))
 	})
 }
 
@@ -213,100 +205,94 @@ func Test_GetExamples(t *testing.T) {
 	t.Run("ok - get examples from cache", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mock_database := database_mocks.NewMockDatabase(ctrl)
+		mock_cache := cache_mocks.NewMockCache(ctrl)
 
 		exampleID := constants.GenerateDataPrefixWithULID(constants.Example)
 		created := time.Now()
 
-		mock_cache := cache_mocks.NewMockCache(ctrl)
-
-		channelCached := &entities_channel_v1.Channel{
-			ID:        channelID,
-			UserID:    "user_id",
-			Slug:      "teyz",
-			CreatedAt: created,
-			UpdatedAt: created,
+		examplesCached := []*entities_example_v1.Example{
+			{
+				ID:          exampleID,
+				Description: "hello world !",
+				CreatedAt:   created,
+				UpdatedAt:   created,
+			},
 		}
 
-		channelCachedBytes, _ := json.Marshal(channelCached)
+		exampleCachedBytes, _ := json.Marshal(examplesCached)
 
-		mock_cache.EXPECT().Get(gomock.Any(), channelID).Return(string(channelCachedBytes), nil)
+		mock_cache.EXPECT().Get(gomock.Any(), "go-svc-template:examples").Return(string(exampleCachedBytes), nil)
 
-		s, err := NewChannelStoreService(context.Background(), mock_database, mock_cache)
+		s, err := NewExampleStoreService(context.Background(), mock_database, mock_cache)
 		assert.NotNil(t, s)
 		assert.NoError(t, err)
 
-		channel, err := s.GetChannelByID(context.Background(), channelID)
-		assert.NotNil(t, channel)
+		examples, err := s.FetchExamples(context.Background())
+		assert.NotNil(t, examples)
 		assert.NoError(t, err)
 
-		assert.Equal(t, channelID, channel.ID)
-		assert.Equal(t, "user_id", channel.UserID)
-		assert.Equal(t, "teyz", channel.Slug)
-		assert.True(t, channel.CreatedAt.Equal(created))
-		assert.True(t, channel.UpdatedAt.Equal(created))
+		for _, example := range examples {
+			assert.Equal(t, exampleID, example.ID)
+			assert.Equal(t, "hello world !", example.Description)
+			assert.True(t, example.CreatedAt.Equal(created))
+			assert.True(t, example.UpdatedAt.Equal(created))
+		}
 	})
 	t.Run("ok - get examples from database", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mock_database := database_mocks.NewMockDatabase(ctrl)
-
-		channelID := constants.GenerateDataPrefixWithULID(constants.Channel)
-		created := time.Now()
-
-		mock_database.EXPECT().GetChannelByID(gomock.Any(), channelID).Return(&entities_channel_v1.Channel{
-			ID:        channelID,
-			UserID:    "user_id",
-			Slug:      "teyz",
-			CreatedAt: created,
-			UpdatedAt: created,
-		}, nil)
-
 		mock_cache := cache_mocks.NewMockCache(ctrl)
 
-		mock_cache.EXPECT().Get(gomock.Any(), channelID).Return("", pkgerrors.NewNotFoundError("error"))
+		exampleID := constants.GenerateDataPrefixWithULID(constants.Example)
+		created := time.Now()
 
-		channelCached := &entities_channel_v1.Channel{
-			ID:        channelID,
-			UserID:    "user_id",
-			Slug:      "teyz",
-			CreatedAt: created,
-			UpdatedAt: created,
+		examplesResults := []*entities_example_v1.Example{
+			{
+				ID:          exampleID,
+				Description: "hello world !",
+				CreatedAt:   created,
+				UpdatedAt:   created,
+			},
 		}
 
-		channelCachedBytes, _ := json.Marshal(channelCached)
+		mock_database.EXPECT().FetchExamples(gomock.Any()).Return(examplesResults, nil)
 
-		mock_cache.EXPECT().SetEx(gomock.Any(), fmt.Sprintf("chnl-store-svc:channel:id:%+v", channelID), channelCachedBytes, time.Hour*24).Return(nil)
+		mock_cache.EXPECT().Get(gomock.Any(), "go-svc-template:examples").Return("", errors.NewNotFoundError("error"))
 
-		s, err := NewChannelStoreService(context.Background(), mock_database, mock_cache)
+		exampleCachedBytes, _ := json.Marshal(examplesResults)
+
+		mock_cache.EXPECT().SetEx(gomock.Any(), "go-svc-template:examples", exampleCachedBytes, time.Hour*24).Return(nil)
+
+		s, err := NewExampleStoreService(context.Background(), mock_database, mock_cache)
 		assert.NotNil(t, s)
 		assert.NoError(t, err)
 
-		channel, err := s.GetChannelByID(context.Background(), channelID)
-		assert.NotNil(t, channel)
+		examples, err := s.FetchExamples(context.Background())
+		assert.NotNil(t, examples)
 		assert.NoError(t, err)
 
-		assert.Equal(t, channelID, channel.ID)
-		assert.Equal(t, "user_id", channel.UserID)
-		assert.Equal(t, "teyz", channel.Slug)
-		assert.True(t, channel.CreatedAt.Equal(created))
-		assert.True(t, channel.UpdatedAt.Equal(created))
+		for _, example := range examples {
+			assert.Equal(t, exampleID, example.ID)
+			assert.Equal(t, "hello world !", example.Description)
+			assert.True(t, example.CreatedAt.Equal(created))
+			assert.True(t, example.UpdatedAt.Equal(created))
+		}
 	})
 	t.Run("nok - get examples from database", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mock_database := database_mocks.NewMockDatabase(ctrl)
-		channelID := constants.GenerateDataPrefixWithULID(constants.Channel)
-
-		mock_database.EXPECT().GetChannelByID(gomock.Any(), channelID).Return(nil, pkgerrors.NewNotFoundError("error"))
-
 		mock_cache := cache_mocks.NewMockCache(ctrl)
 
-		mock_cache.EXPECT().Get(gomock.Any(), channelID).Return("", pkgerrors.NewNotFoundError("error"))
+		mock_database.EXPECT().FetchExamples(gomock.Any()).Return(nil, errors.NewNotFoundError("error"))
 
-		s, err := NewChannelStoreService(context.Background(), mock_database, mock_cache)
+		mock_cache.EXPECT().Get(gomock.Any(), "go-svc-template:examples").Return("", errors.NewNotFoundError("error"))
+
+		s, err := NewExampleStoreService(context.Background(), mock_database, mock_cache)
 		assert.NotNil(t, s)
 		assert.NoError(t, err)
 
-		channel, err := s.GetChannelByID(context.Background(), channelID)
-		assert.Nil(t, channel)
+		example, err := s.FetchExamples(context.Background())
+		assert.Nil(t, example)
 		assert.Error(t, err)
 	})
 	t.Run("ok - get examples when get cache", func(t *testing.T) {
@@ -314,44 +300,41 @@ func Test_GetExamples(t *testing.T) {
 		mock_database := database_mocks.NewMockDatabase(ctrl)
 		mock_cache := cache_mocks.NewMockCache(ctrl)
 
-		channelID := constants.GenerateDataPrefixWithULID(constants.Channel)
-		created := time.Now()
 		fakeData := `abczd{>`
 
-		mock_cache.EXPECT().Get(gomock.Any(), channelID).Return(fakeData, nil)
+		exampleID := constants.GenerateDataPrefixWithULID(constants.Example)
+		created := time.Now()
 
-		mock_database.EXPECT().GetChannelByID(gomock.Any(), channelID).Return(&entities_channel_v1.Channel{
-			ID:        channelID,
-			UserID:    "user_id",
-			Slug:      "teyz",
-			CreatedAt: created,
-			UpdatedAt: created,
-		}, nil)
+		mock_cache.EXPECT().Get(gomock.Any(), "go-svc-template:examples").Return(fakeData, nil)
 
-		channelCached := &entities_channel_v1.Channel{
-			ID:        channelID,
-			UserID:    "user_id",
-			Slug:      "teyz",
-			CreatedAt: created,
-			UpdatedAt: created,
+		examplesResults := []*entities_example_v1.Example{
+			{
+				ID:          exampleID,
+				Description: "hello world !",
+				CreatedAt:   created,
+				UpdatedAt:   created,
+			},
 		}
 
-		channelCachedBytes, _ := json.Marshal(channelCached)
+		mock_database.EXPECT().FetchExamples(gomock.Any()).Return(examplesResults, nil)
 
-		mock_cache.EXPECT().SetEx(gomock.Any(), fmt.Sprintf("chnl-store-svc:channel:id:%+v", channelID), channelCachedBytes, time.Hour*24).Return(nil)
+		exampleCachedBytes, _ := json.Marshal(examplesResults)
 
-		s, err := NewChannelStoreService(context.Background(), mock_database, mock_cache)
+		mock_cache.EXPECT().SetEx(gomock.Any(), "go-svc-template:examples", exampleCachedBytes, time.Hour*24).Return(nil)
+
+		s, err := NewExampleStoreService(context.Background(), mock_database, mock_cache)
 		assert.NotNil(t, s)
 		assert.NoError(t, err)
 
-		channel, err := s.GetChannelByID(context.Background(), channelID)
-		assert.NotNil(t, channel)
+		examples, err := s.FetchExamples(context.Background())
+		assert.NotNil(t, examples)
 		assert.NoError(t, err)
 
-		assert.Equal(t, channelID, channel.ID)
-		assert.Equal(t, "user_id", channel.UserID)
-		assert.Equal(t, "teyz", channel.Slug)
-		assert.True(t, channel.CreatedAt.Equal(created))
-		assert.True(t, channel.UpdatedAt.Equal(created))
+		for _, example := range examples {
+			assert.Equal(t, exampleID, example.ID)
+			assert.Equal(t, "hello world !", example.Description)
+			assert.True(t, example.CreatedAt.Equal(created))
+			assert.True(t, example.UpdatedAt.Equal(created))
+		}
 	})
 }

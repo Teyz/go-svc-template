@@ -35,7 +35,7 @@ func (h *Handler) CreateExample(c echo.Context) error {
 		return c.JSON(pkg_http.TranslateError(ctx, err))
 	}
 
-	return c.JSON(http.StatusOK, pkg_http.NewHTTPResponse(http.StatusOK, pkg_http.MessageSuccess, CreateExampleResponse{
+	return c.JSON(http.StatusCreated, pkg_http.NewHTTPResponse(http.StatusCreated, pkg_http.MessageSuccess, CreateExampleResponse{
 		Example: &entities_example_v1.Example{
 			ID:          example.ID,
 			Description: example.Description,
