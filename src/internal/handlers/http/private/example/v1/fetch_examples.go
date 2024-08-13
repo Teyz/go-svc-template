@@ -8,7 +8,7 @@ import (
 	pkg_http "github.com/teyz/go-svc-template/pkg/http"
 )
 
-type GetExamplesResponse struct {
+type FetchExamplesResponse struct {
 	Examples []*entities_example_v1.Example `json:"examples"`
 }
 
@@ -22,7 +22,7 @@ func (h *Handler) FetchExamples(c echo.Context) error {
 
 	examplesResp := make([]*entities_example_v1.Example, 0, len(examples))
 
-	for _, example := range examplesResp {
+	for _, example := range examples {
 		examplesResp = append(examplesResp, &entities_example_v1.Example{
 			ID:          example.ID,
 			Description: example.Description,
@@ -31,7 +31,7 @@ func (h *Handler) FetchExamples(c echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusOK, pkg_http.NewHTTPResponse(http.StatusOK, pkg_http.MessageSuccess, GetExamplesResponse{
+	return c.JSON(http.StatusOK, pkg_http.NewHTTPResponse(http.StatusOK, pkg_http.MessageSuccess, FetchExamplesResponse{
 		Examples: examplesResp,
 	}))
 }
