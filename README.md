@@ -2,11 +2,11 @@
 
 ## Overview
 
-This repository provides a template for building microservices using Node.js and TypeScript, with Docker support for easy containerization and deployment. It is designed to help you quickly set up a scalable, maintainable microservice architecture.
+This repository provides a template for building microservices using Go and Echo, with Docker support for easy containerization and deployment. It includes PostgreSQL for database management and Redis for caching, making it a comprehensive solution for developing scalable and maintainable microservices.
 
 ## Features
 
-- **Golang**: Asynchronous, event-driven JavaScript runtime.
+- **Go**: Statically typed, compiled programming language designed for simplicity and efficiency.
 - **Docker**: Containerization for consistent environments across different stages of development and deployment.
 - **Echo**: Lightweight web framework for building RESTful APIs.
 - **Redis**: In-memory data structure store, used as a database, cache, and message broker.
