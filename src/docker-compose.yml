@@ -17,7 +17,7 @@ services:
         - DB_PORT=5432
         - HTTP_SERVER_PORT=3003
         - CACHE_HOST=go-svc-template-redis
-        - CACHE_PORT=6380
+        - CACHE_PORT=6379
         - SERVICE_NAME=go-svc-template
         - ENVRIONMENT=local
       volumes:
@@ -28,7 +28,7 @@ services:
   go-svc-template-redis:
     image: redis:latest
     ports:
-      - "6380:6380"
+      - "6379:6379"
   go-svc-template-db:
     image: postgres:latest
     environment:
