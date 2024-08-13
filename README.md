@@ -22,6 +22,12 @@ This repository provides a template for building microservices using Node.js and
 
 ## Getting Started
 
+Make sure you have goose installed on your computer
+
+```bash 
+go install github.com/pressly/goose/v3/cmd/goose@latest
+```
+
 ### Clone the Repository
 
 ```bash
